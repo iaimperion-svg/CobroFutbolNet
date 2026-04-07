@@ -1,0 +1,458 @@
+﻿@model List<CobroFutbol.Web.Models.Pago>
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Recaudación Mensual";
+    var cl = new CultureInfo("es-CL");
+    var total = Model.Sum(p => p.Monto);
+}
+
+<style>
+    :root {
+        --bg-layer:     rgba(255,255,255,0.035);
+        --bg-elevated:  rgba(255,255,255,0.06);
+        --bg-hover:     rgba(255,255,255,0.08);
+        --glass-border: rgba(255,255,255,0.09);
+        --glass-shine:  rgba(255,255,255,0.13);
+        --accent:       #34d399;
+        --accent-dim:   rgba(52,211,153,0.15);
+        --blue:         #60a5fa;
+        --blue-dim:     rgba(96,165,250,0.13);
+        --text-1:       #f2f2f7;
+        --text-2:       #c7c7cc;
+        --text-3:       #8e8e93;
+        --shadow-card:  0 4px 24px rgba(0,0,0,0.35);
+        --shadow-glass: 0 8px 32px rgba(0,0,0,0.45), 0 1px 0 var(--glass-shine) inset;
+    }
+
+    body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(ellipse 55% 45% at 15% 10%, rgba(52,211,153,0.07) 0%, transparent 65%),
+            radial-gradient(ellipse 40% 35% at 85% 80%, rgba(96,165,250,0.06) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .detail-page {
+        padding: 24px 0 60px;
+    }
+
+    .detail-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        color: var(--text-2);
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 14px;
+    }
+
+    .detail-back-link:hover {
+        color: var(--text-1);
+        text-decoration: none;
+    }
+
+    .detail-subheader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .detail-page-title {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-3);
+    }
+
+    .detail-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 999px;
+        padding: 5px 14px 5px 10px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-2);
+    }
+
+    .detail-date-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+        animation: blink 2s ease-in-out infinite;
+    }
+
+    @@keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
+    }
+
+    .detail-header {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 26px;
+        flex-wrap: wrap;
+    }
+
+    .detail-title-block {
+        flex: 1 1 420px;
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 22px 22px 20px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-card);
+    }
+
+    .detail-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--text-1);
+        margin: 0 0 6px 0;
+    }
+
+    .detail-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-3);
+        margin: 0;
+    }
+
+    .detail-summary-card {
+        min-width: 280px;
+        flex: 0 0 320px;
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 20px 18px 18px;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-card);
+    }
+
+    .detail-summary-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 18%;
+        right: 18%;
+        height: 1px;
+        border-radius: 0 0 3px 3px;
+        background: var(--accent);
+        box-shadow: 0 0 10px rgba(52,211,153,0.5);
+        opacity: 0.8;
+    }
+
+    .detail-summary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .detail-summary-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent-dim);
+    }
+
+    .detail-summary-tag {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-3);
+        padding: 3px 8px;
+        background: var(--bg-elevated);
+        border-radius: 999px;
+        border: 1px solid var(--glass-border);
+    }
+
+    .detail-summary-value {
+        font-size: 1.85rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-bottom: 5px;
+        color: var(--accent);
+    }
+
+    .detail-summary-label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--text-3);
+    }
+
+    .detail-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .detail-table-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-1);
+    }
+
+    .detail-table-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--blue-dim);
+        border: 1px solid rgba(96,165,250,0.22);
+        color: var(--blue);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding: 3px 10px 3px 7px;
+        border-radius: 999px;
+    }
+
+    .detail-pill-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--blue);
+        flex-shrink: 0;
+    }
+
+    .detail-table-wrap {
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-glass);
+    }
+
+    .detail-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .detail-table thead tr {
+        border-bottom: 1px solid var(--glass-border);
+        background: rgba(255,255,255,0.02);
+    }
+
+    .detail-table thead th {
+        padding: 11px 16px;
+        text-align: left;
+        font-size: 0.67rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        white-space: nowrap;
+    }
+
+    .detail-table tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.13s;
+    }
+
+    .detail-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .detail-table tbody tr:hover {
+        background: var(--bg-hover);
+    }
+
+    .detail-table tbody td {
+        padding: 12px 16px;
+        font-size: 0.84rem;
+        color: var(--text-2);
+        vertical-align: middle;
+    }
+
+    .td-date {
+        font-size: 0.79rem;
+        color: #b0b0b6;
+        font-weight: 500;
+    }
+
+    .td-name {
+        font-weight: 600;
+        color: var(--text-1);
+        font-size: 0.86rem;
+    }
+
+    .td-sub {
+        font-size: 0.81rem;
+        color: #b8b8be;
+        font-weight: 500;
+    }
+
+    .td-amount {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: -0.02em;
+    }
+
+    .detail-empty {
+        padding: 50px 0;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .detail-empty__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2px;
+    }
+
+    .detail-empty__title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .detail-empty__sub {
+        font-size: 0.76rem;
+        color: var(--text-3);
+    }
+
+    @@media (max-width: 768px) {
+        .detail-title {
+            font-size: 1.45rem;
+        }
+
+        .detail-summary-card {
+            flex: 1 1 100%;
+            min-width: auto;
+        }
+    }
+</style>
+
+<div class="detail-page">
+
+    <a asp-controller="Dashboard" asp-action="Index" class="detail-back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Volver al dashboard
+    </a>
+
+    <div class="detail-subheader">
+        <span class="detail-page-title">Detalle mensual</span>
+        <div class="detail-date">
+            <span class="detail-date-dot"></span>
+            @DateTime.Now.ToString("MMMM yyyy", cl)
+        </div>
+    </div>
+
+    <div class="detail-header">
+        <div class="detail-title-block">
+            <h1 class="detail-title">Recaudación del mes</h1>
+            <p class="detail-subtitle">
+                Listado de pagos recibidos durante el mes actual.
+            </p>
+        </div>
+
+        <div class="detail-summary-card">
+            <div class="detail-summary-header">
+                <div class="detail-summary-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                </div>
+                <span class="detail-summary-tag">Este mes</span>
+            </div>
+
+            <div class="detail-summary-value">@total.ToString("C0", cl)</div>
+            <div class="detail-summary-label">Total recaudado</div>
+        </div>
+    </div>
+
+    <div class="detail-toolbar">
+        <span class="detail-table-title">Pagos recibidos</span>
+        <div class="detail-table-pill">
+            <span class="detail-pill-dot"></span>
+            @Model.Count registro(s)
+        </div>
+    </div>
+
+    <div class="detail-table-wrap">
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Pagador</th>
+                    <th>Alumno</th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var p in Model)
+                    {
+                        <tr>
+                            <td><span class="td-date">@p.FechaPago.ToString("dd/MM/yyyy")</span></td>
+                            <td><span class="td-name">@p.Pagador</span></td>
+                            <td><span class="td-sub">@p.Alumno</span></td>
+                            <td><span class="td-amount">@p.Monto.ToString("C0", cl)</span></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">
+                            <div class="detail-empty">
+                                <div class="detail-empty__icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#636366" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <p class="detail-empty__title">Sin pagos recibidos</p>
+                                <p class="detail-empty__sub">No hay movimientos registrados este mes</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

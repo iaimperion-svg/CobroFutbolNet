@@ -1,0 +1,681 @@
+﻿@model CobroFutbol.Web.ViewModels.DashboardViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var cl = new CultureInfo("es-CL");
+}
+
+<style>
+    :root {
+        --bg-layer:     rgba(255,255,255,0.035);
+        --bg-elevated:  rgba(255,255,255,0.06);
+        --bg-hover:     rgba(255,255,255,0.08);
+        --glass-border: rgba(255,255,255,0.09);
+        --glass-shine:  rgba(255,255,255,0.13);
+        --accent:       #34d399;
+        --accent-dim:   rgba(52,211,153,0.15);
+        --amber:        #f59e0b;
+        --amber-dim:    rgba(245,158,11,0.13);
+        --blue:         #60a5fa;
+        --blue-dim:     rgba(96,165,250,0.13);
+        --red:          #f87171;
+        --red-dim:      rgba(248,113,113,0.13);
+        --text-1:       #f2f2f7;
+        --text-2:       #c7c7cc;
+        --text-3:       #8e8e93;
+        --shadow-card:  0 4px 24px rgba(0,0,0,0.35);
+        --shadow-glass: 0 8px 32px rgba(0,0,0,0.45), 0 1px 0 var(--glass-shine) inset;
+    }
+
+    body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(ellipse 55% 45% at 15% 10%, rgba(52,211,153,0.07) 0%, transparent 65%),
+            radial-gradient(ellipse 40% 35% at 85% 80%, rgba(96,165,250,0.06) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .dash-page {
+        padding: 24px 0 60px;
+    }
+
+    .dash-subheader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .dash-page-title {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-3);
+    }
+
+    .dash-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 999px;
+        padding: 5px 14px 5px 10px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-2);
+    }
+
+    .dash-date-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+        animation: blink 2s ease-in-out infinite;
+    }
+
+    @@keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
+    }
+
+    .dash-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+
+    @@media (max-width: 860px) {
+        .dash-metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .dash-metrics {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .dash-metric {
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 20px 18px 18px;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        display: block;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: background 0.2s, border-color 0.2s, transform 0.18s, box-shadow 0.18s;
+        box-shadow: var(--shadow-card);
+    }
+
+    .dash-metric:hover {
+        background: var(--bg-elevated);
+        border-color: var(--glass-shine);
+        transform: translateY(-2px);
+        text-decoration: none;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.38);
+    }
+
+    .dash-metric::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 18%;
+        right: 18%;
+        height: 1px;
+        border-radius: 0 0 3px 3px;
+        opacity: 0.8;
+    }
+
+    .dash-metric--green::after { background: var(--accent); box-shadow: 0 0 10px rgba(52,211,153,0.5); }
+    .dash-metric--amber::after { background: var(--amber); box-shadow: 0 0 10px rgba(245,158,11,0.5); }
+    .dash-metric--blue::after  { background: var(--blue); box-shadow: 0 0 10px rgba(96,165,250,0.5); }
+    .dash-metric--red::after   { background: var(--red); box-shadow: 0 0 10px rgba(248,113,113,0.5); }
+
+    .dash-metric__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .dash-metric__icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dash-metric--green .dash-metric__icon { background: var(--accent-dim); }
+    .dash-metric--amber .dash-metric__icon { background: var(--amber-dim); }
+    .dash-metric--blue  .dash-metric__icon { background: var(--blue-dim); }
+    .dash-metric--red   .dash-metric__icon { background: var(--red-dim); }
+
+    .dash-metric__tag {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-3);
+        padding: 3px 8px;
+        background: var(--bg-elevated);
+        border-radius: 999px;
+        border: 1px solid var(--glass-border);
+    }
+
+    .dash-metric__value {
+        font-size: 1.85rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+
+    .dash-metric--green .dash-metric__value { color: var(--accent); }
+    .dash-metric--amber .dash-metric__value { color: var(--amber); }
+    .dash-metric--blue  .dash-metric__value { color: var(--blue); }
+    .dash-metric--red   .dash-metric__value { color: var(--red); }
+
+    .dash-metric__label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--text-3);
+    }
+
+    .dash-metric__hint {
+        margin-top: 8px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: rgba(52,211,153,0.8);
+        letter-spacing: 0.01em;
+    }
+
+    .dash-table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .dash-table-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-1);
+    }
+
+    .dash-table-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--amber-dim);
+        border: 1px solid rgba(245,158,11,0.22);
+        color: var(--amber);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding: 3px 10px 3px 7px;
+        border-radius: 999px;
+    }
+
+    .dash-pill-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--amber);
+        flex-shrink: 0;
+    }
+
+    .dash-table-wrap {
+        background: var(--bg-layer);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-glass);
+    }
+
+    .dash-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .dash-table thead tr {
+        border-bottom: 1px solid var(--glass-border);
+        background: rgba(255,255,255,0.02);
+    }
+
+    .dash-table thead th {
+        padding: 11px 16px;
+        text-align: left;
+        font-size: 0.67rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        white-space: nowrap;
+    }
+
+    .dash-table tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background 0.13s;
+    }
+
+    .dash-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .dash-table tbody tr:hover {
+        background: var(--bg-hover);
+    }
+
+    .dash-table tbody td {
+        padding: 12px 16px;
+        font-size: 0.84rem;
+        color: var(--text-2);
+        vertical-align: middle;
+    }
+
+    .td-id {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #7c7c82;
+        font-family: 'SF Mono', monospace;
+    }
+
+    .td-name {
+        font-weight: 600;
+        color: var(--text-1);
+        font-size: 0.86rem;
+    }
+
+    .td-sub {
+        font-size: 0.81rem;
+        color: #b8b8be;
+        font-weight: 500;
+    }
+
+    .td-amount {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: -0.02em;
+    }
+
+    .td-date {
+        font-size: 0.79rem;
+        color: #b0b0b6;
+        font-weight: 500;
+    }
+
+    .dash-btn-view {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--blue-dim);
+        border: 1px solid rgba(96,165,250,0.2);
+        color: var(--blue);
+        padding: 4px 11px;
+        border-radius: 7px;
+        font-size: 0.73rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+    .dash-btn-view:hover {
+        background: rgba(96,165,250,0.22);
+        color: #93c5fd;
+        text-decoration: none;
+    }
+
+    .dash-no-file {
+        font-size: 0.73rem;
+        color: var(--text-3);
+    }
+
+    .dash-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .dash-btn-ok,
+    .dash-btn-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-width: 126px;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 8px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: filter 0.15s, transform 0.1s;
+    }
+
+    .dash-btn-ok:hover,
+    .dash-btn-no:hover {
+        filter: brightness(1.15);
+        transform: scale(1.02);
+    }
+
+    .dash-btn-ok {
+        background: rgba(52,211,153,0.12);
+        border-color: rgba(52,211,153,0.22);
+        color: var(--accent);
+    }
+
+    .dash-btn-no {
+        background: var(--red-dim);
+        border-color: rgba(248,113,113,0.22);
+        color: var(--red);
+    }
+
+    .dash-empty {
+        padding: 50px 0;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .dash-empty__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2px;
+    }
+
+    .dash-empty__title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .dash-empty__sub {
+        font-size: 0.76rem;
+        color: var(--text-3);
+    }
+
+    .dash-ia-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 90px;
+    }
+
+    .dash-ia-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+    }
+
+    .dash-ia-badge--green {
+        background: rgba(52,211,153,0.15);
+        color: var(--accent);
+        border-color: rgba(52,211,153,0.25);
+    }
+
+    .dash-ia-badge--amber {
+        background: rgba(245,158,11,0.15);
+        color: var(--amber);
+        border-color: rgba(245,158,11,0.25);
+    }
+
+    .dash-ia-badge--blue {
+        background: rgba(96,165,250,0.15);
+        color: var(--blue);
+        border-color: rgba(96,165,250,0.25);
+    }
+
+    .dash-ia-confidence {
+        font-size: 0.68rem;
+        color: var(--text-3);
+        font-weight: 600;
+    }
+</style>
+
+<div class="dash-page">
+
+    <div class="dash-subheader">
+        <span class="dash-page-title">Resumen del mes</span>
+        <div class="dash-date">
+            <span class="dash-date-dot"></span>
+            @DateTime.Now.ToString("dddd, dd 'de' MMMM yyyy", new CultureInfo("es-CL"))
+        </div>
+    </div>
+
+    <div class="dash-metrics">
+
+        <a class="dash-metric dash-metric--green" asp-controller="Dashboard" asp-action="RecaudacionMensual">
+            <div class="dash-metric__header">
+                <div class="dash-metric__icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                </div>
+                <span class="dash-metric__tag">Este mes</span>
+            </div>
+            <div class="dash-metric__value">@Model.TotalRecaudadoMes.ToString("C0", cl)</div>
+            <div class="dash-metric__label">Total recaudado</div>
+            <div class="dash-metric__hint">Ver detalle mensual →</div>
+        </a>
+
+        <div class="dash-metric dash-metric--amber">
+            <div class="dash-metric__header">
+                <div class="dash-metric__icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <span class="dash-metric__tag">Pendientes</span>
+            </div>
+            <div class="dash-metric__value">@Model.CantidadPendientes</div>
+            <div class="dash-metric__label">Pagos por revisar</div>
+        </div>
+
+        <div class="dash-metric dash-metric--blue">
+            <div class="dash-metric__header">
+                <div class="dash-metric__icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <span class="dash-metric__tag">Recibidos</span>
+            </div>
+            <div class="dash-metric__value">@Model.CantidadValidados</div>
+            <div class="dash-metric__label">Pagos recibidos</div>
+        </div>
+
+        <div class="dash-metric dash-metric--red">
+            <div class="dash-metric__header">
+                <div class="dash-metric__icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                </div>
+                <span class="dash-metric__tag">Rechazados</span>
+            </div>
+            <div class="dash-metric__value">@Model.CantidadRechazados</div>
+            <div class="dash-metric__label">Pagos rechazados</div>
+        </div>
+
+    </div>
+
+    <div class="dash-table-header">
+        <span class="dash-table-title">Pagos pendientes</span>
+        <div class="dash-table-pill">
+            <span class="dash-pill-dot"></span>
+            Pendientes de revisión
+        </div>
+    </div>
+
+    <div class="dash-table-wrap">
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Pagador</th>
+                    <th>Alumno</th>
+                    <th>Monto</th>
+                    <th>Fecha</th>
+                    <th>Comprobante</th>
+                    <th>IA</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.PagosPendientes.Any())
+                {
+                    foreach (var pago in Model.PagosPendientes)
+                    {
+                        var estadoIa = pago.EstadoConciliacion?.Trim();
+                        var badgeClass = "dash-ia-badge--blue";
+
+                        if (!string.IsNullOrWhiteSpace(estadoIa))
+                        {
+                            if (estadoIa.Equals("Conciliado", StringComparison.OrdinalIgnoreCase))
+                            {
+                                badgeClass = "dash-ia-badge--green";
+                            }
+                            else if (
+                                estadoIa.Equals("Observado", StringComparison.OrdinalIgnoreCase) ||
+                                estadoIa.Equals("Pendiente", StringComparison.OrdinalIgnoreCase))
+                            {
+                                badgeClass = "dash-ia-badge--amber";
+                            }
+                        }
+
+                        <tr>
+                            <td><span class="td-id">#@pago.Id</span></td>
+                            <td><span class="td-name">@pago.Pagador</span></td>
+                            <td><span class="td-sub">@pago.Alumno</span></td>
+                            <td><span class="td-amount">@pago.Monto.ToString("C0", cl)</span></td>
+                            <td><span class="td-date">@pago.FechaPago.ToString("dd/MM/yyyy")</span></td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(pago.ComprobanteUrl))
+                                {
+                                    <a href="@pago.ComprobanteUrl" target="_blank" class="dash-btn-view">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        Ver
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="dash-no-file">Sin archivo</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(estadoIa))
+                                {
+                                    <div class="dash-ia-cell">
+                                        <span class="dash-ia-badge @badgeClass">
+                                            @estadoIa
+                                        </span>
+
+                                        @if (pago.ConfianzaIA.HasValue)
+                                        {
+                                            <span class="dash-ia-confidence">
+                                                @pago.ConfianzaIA.Value.ToString("0")%
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="dash-no-file">—</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="dash-actions">
+                                    <form asp-action="Validar" method="post" style="margin:0">
+                                        <input type="hidden" name="id" value="@pago.Id" />
+                                        <button type="submit" class="dash-btn-ok"
+                                                onclick="return confirm('¿Aprobar este pago?')">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                            Aprobar
+                                        </button>
+                                    </form>
+                                    <form asp-action="Rechazar" method="post" style="margin:0">
+                                        <input type="hidden" name="id" value="@pago.Id" />
+                                        <button type="submit" class="dash-btn-no"
+                                                onclick="return confirm('¿Rechazar este pago?')">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                            </svg>
+                                            Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="dash-empty">
+                                <div class="dash-empty__icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#636366" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <p class="dash-empty__title">Sin pagos pendientes</p>
+                                <p class="dash-empty__sub">Todo está al día por el momento</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
