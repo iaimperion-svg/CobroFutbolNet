@@ -7,3 +7,4 @@ appsettings.Development.json
 appsettings.*.local.json
 .env
 publish/
+appsettings.Development.json
